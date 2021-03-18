@@ -35,7 +35,7 @@ func index(ctx *fasthttp.RequestCtx) {
 
 func bugHttp() {
 
-	log.Println("fasthttp")
+	// log.Println("fasthttp")
 
 	m := func(ctx *fasthttp.RequestCtx) {
 		switch string(ctx.Path()) {

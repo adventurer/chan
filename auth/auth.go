@@ -7,6 +7,7 @@ import (
 	"log"
 	"net/http"
 	"net/url"
+	"sync"
 	"time"
 )
 
@@ -31,11 +32,12 @@ type User struct {
 	UpdatedAt   time.Time
 }
 
-var cacheTime time.Time = time.Now()
+var m = sync.Map{}
 
 func Auth(apiAddress, token string) bool {
 	defer recoverName()
-	if cacheTime.Unix() > time.Now().Unix() {
+	_, ok := m.Load(token)
+	if ok {
 		log.Println("auth cache")
 		return true
 	}
@@ -65,7 +67,7 @@ func Auth(apiAddress, token string) bool {
 		return false
 	}
 	log.Println("auth http")
-	cacheTime = result.Data.ExpiredAt
+	m.Store(token, true)
 	return true
 }
 
