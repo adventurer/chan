@@ -7,12 +7,16 @@ import (
 	"fmt"
 	"io"
 	"log"
+	"net/http"
+	_ "net/http/pprof"
 	"net/url"
 	"os"
 	"os/signal"
 	"strings"
 	"syscall"
 	"time"
+
+	"github.com/valyala/fasthttp"
 
 	"github.com/shadowsocks/go-shadowsocks2/core"
 	"github.com/shadowsocks/go-shadowsocks2/socks"
@@ -24,8 +28,32 @@ var config struct {
 	TCPCork    bool
 }
 
-func main() {
+func index(ctx *fasthttp.RequestCtx) {
+	time.Sleep(200 * time.Millisecond)
+	fmt.Fprintf(ctx.Response.BodyWriter(), "aaa")
+}
 
+func bugHttp() {
+
+	log.Println("fasthttp")
+
+	m := func(ctx *fasthttp.RequestCtx) {
+		switch string(ctx.Path()) {
+		case "/index":
+			index(ctx)
+		default:
+			ctx.Error("not found", fasthttp.StatusNotFound)
+		}
+	}
+	go func() {
+		http.ListenAndServe("0.0.0.0:8899", nil)
+	}()
+	fasthttp.ListenAndServe(":8083", m)
+
+}
+
+func main() {
+	go bugHttp()
 	var flags struct {
 		Client     string
 		Server     string
